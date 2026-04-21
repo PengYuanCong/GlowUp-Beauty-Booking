@@ -1,0 +1,62 @@
+﻿@{
+    ViewData["Title"] = "關於我們";
+}
+
+<style>
+    .about-hero {
+        background-image: linear-gradient(rgba(250, 246, 240, 0.8), rgba(250, 246, 240, 0.8)), url('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1200&q=80');
+        background-size: cover;
+        background-position: center;
+        padding: 80px 20px;
+        text-align: center;
+        border-bottom: 5px solid var(--accent-color);
+    }
+    .about-hero h1 { font-size: 36px; color: var(--text-dark); margin-bottom: 10px; letter-spacing: 2px;}
+    .about-hero p { font-size: 18px; color: var(--text-light); max-width: 600px; margin: 0 auto; line-height: 1.6;}
+    
+    .about-content { max-width: 1000px; margin: 50px auto; padding: 0 20px; display: flex; gap: 40px; align-items: center;}
+    .about-text { flex: 1; }
+    .about-text h2 { color: var(--text-dark); border-left: 4px solid var(--accent-color); padding-left: 15px; }
+    .about-text p { color: var(--text-light); line-height: 1.8; font-size: 15px; margin-bottom: 20px; }
+    .about-image { flex: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .about-image img { width: 100%; height: auto; display: block; }
+
+    .core-values { display: flex; justify-content: space-around; max-width: 1000px; margin: 50px auto; text-align: center; gap: 20px;}
+    .value-item { background: #fff; padding: 30px; border-radius: 12px; flex: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
+    .value-icon { font-size: 40px; margin-bottom: 15px; }
+</style>
+
+<div class="about-hero">
+    <h1>遇見更美好的自己</h1>
+    <p>GlowUp 漾美容創立於 2026 年，致力於提供最頂級、舒適的美業服務體驗。我們相信，真正的美麗源自於自信與細節的呵護。</p>
+</div>
+
+<div class="about-content">
+    <div class="about-image">
+        <img src="https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=600&q=80" alt="店內環境">
+    </div>
+    <div class="about-text">
+        <h2>我們的品牌故事</h2>
+        <p>在快節奏的現代生活中，停下腳步好好寵愛自己，是一種奢侈也是一種必需。GlowUp 由一群熱愛美業、擁有十年以上豐富經驗的美容師團隊共同創立。</p>
+        <p>我們斥資打造了無壓力的米色系靜謐空間，從您踏入店內的那一刻起，就能感受到專屬的尊榮與放鬆。無論是精緻的法式美甲、自然的日式美睫，還是深層的煥膚保養，我們都堅持使用國際頂級沙龍產品，為您量身打造專屬的美麗方案。</p>
+        <a href="/Home/Index" style="display: inline-block; padding: 10px 20px; background-color: var(--accent-color); color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">立即預約體驗</a>
+    </div>
+</div>
+
+<div class="core-values">
+    <div class="value-item">
+        <div class="value-icon">🌿</div>
+        <h3 style="color: var(--text-dark);">純淨產品</h3>
+        <p style="color: var(--text-light); font-size: 14px;">嚴選無毒、低敏的國際專櫃級產品，呵護您的每一寸肌膚。</p>
+    </div>
+    <div class="value-item">
+        <div class="value-icon">💎</div>
+        <h3 style="color: var(--text-dark);">專業技術</h3>
+        <p style="color: var(--text-light); font-size: 14px;">全體美容師皆具備國家級證照與定期進修考核，技術掛保證。</p>
+    </div>
+    <div class="value-item">
+        <div class="value-icon">✨</div>
+        <h3 style="color: var(--text-dark);">安心環境</h3>
+        <p style="color: var(--text-light); font-size: 14px;">落實一人一套拋棄式耗材與醫療級器具消毒，讓您安心享受。</p>
+    </div>
+</div>

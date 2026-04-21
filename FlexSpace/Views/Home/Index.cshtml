@@ -1,0 +1,149 @@
+﻿@model IEnumerable<FlexSpace.Models.BeautyService>
+@{
+    ViewData["Title"] = "首頁";
+}
+
+<style>
+    .main-container { display: flex; max-width: 1200px; margin: 40px auto; gap: 30px; padding: 0 20px; }
+    .content-left { flex: 7; }
+    .content-right { flex: 3; display: flex; flex-direction: column; gap: 20px; }
+    
+    /* 區塊共用樣式 */
+    .white-box { background-color: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 30px; }
+    
+    /* 服務卡片櫥窗設計 */
+    .service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+    .service-card { background: var(--card-bg); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.3s; }
+    .service-card:hover { transform: translateY(-5px); }
+    .service-img { width: 100%; height: 180px; object-fit: cover; }
+    .service-info { padding: 15px; }
+    .service-info h4 { margin: 0 0 10px 0; color: var(--text-dark); font-size: 18px; }
+    .service-info p { margin: 5px 0; color: var(--text-light); font-size: 14px; }
+    .tag { display: inline-block; background-color: var(--bg-color); color: var(--accent-color); padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+
+    /* 側邊欄樣式 */
+    .sidebar-widget { background-color: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    .sidebar-widget h3 { margin-top: 0; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; margin-bottom: 15px; }
+    .beautician-list { list-style: none; padding: 0; margin: 0; }
+    .beautician-list li { padding: 10px 0; border-bottom: 1px dashed #eee; color: var(--text-dark); font-weight: 500;}
+</style>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb; max-width: 1200px; margin-left: auto; margin-right: auto;">
+        ✅ @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb; max-width: 1200px; margin-left: auto; margin-right: auto;">
+        ❌ @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="main-container">
+    <div class="content-left">
+        <div class="white-box" style="border-top: 5px solid var(--accent-color);">
+            <h2 style="margin-top: 0;">📅 快速預約</h2>
+            <form action="/Home/SubmitBooking" method="post">
+                <div class="form-group">
+                    <label>選擇美容服務</label>
+                    <select class="form-control" name="BeautyServiceId" required>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var service in Model)
+                            {
+                                string beauticianName = service.Beautician != null ? service.Beautician.Name : "尚未指定";
+                                <option value="@service.Id">@service.Name (美容師：@beauticianName | @service.DurationMinutes 分鐘) - NT$ @service.Price.ToString("N0")</option>
+                            }
+                        }
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>預約日期</label>
+                        <input type="date" class="form-control" name="BookingDate" required min="@DateTime.Now.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>希望開始時間</label>
+                        <input type="time" class="form-control" name="StartTime" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">立即檢查時段並預約</button>
+            </form>
+        </div>
+
+        <div class="white-box">
+            <h2 style="margin-top: 0;">✨ 我們的專業服務</h2>
+            <p style="color: var(--text-light);">為您量身打造的美麗方案，點擊上方表單立即預約。</p>
+            
+            <div class="service-grid">
+                @if (Model != null)
+                {
+                    foreach (var service in Model)
+                    {
+                        // 1. 預設圖 (避免有新的服務類別沒有圖會破版)
+                        string imageUrl = "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80"; 
+
+                        // 2. 判斷服務名稱或類別，套用你專案裡本機的圖片或線上的圖片
+                        if (service.Name.Contains("角蛋白")) 
+                        { 
+                            // 對應到你本機的 E:\Side Project\FlexSpace\FlexSpace\wwwroot\images\角蛋白睫毛.png
+                            imageUrl = "/images/角蛋白睫毛.png"; 
+                        }
+                        else if (service.Name.Contains("霧眉") || service.Category.Contains("紋繡")) 
+                        { 
+                            // 對應到你本機的 E:\Side Project\FlexSpace\FlexSpace\wwwroot\images\霧眉.png
+                            imageUrl = "/images/霧眉.png"; 
+                        }
+                        else if (service.Category.Contains("美睫")) 
+                        { 
+                            // 對應到你本機的 E:\Side Project\FlexSpace\FlexSpace\wwwroot\images\美睫.png
+                            imageUrl = "/images/美睫.png"; 
+                        }
+                        else if (service.Category.Contains("臉部")) 
+                        { 
+                            // 保留原本的臉部保養線上美圖
+                            imageUrl = "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=400&q=80"; 
+                        }
+                        else if (service.Category.Contains("美甲")) 
+                        { 
+                            // 保留原本的美甲線上美圖
+                            imageUrl = "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=400&q=80"; 
+                        }
+
+                        <div class="service-card">
+                            <img src="@imageUrl" alt="@service.Name" class="service-img" />
+                            <div class="service-info">
+                                <span class="tag">@service.Category</span>
+                                <h4>@service.Name</h4>
+                                <p>⏱️ 時間：@service.DurationMinutes 分鐘</p>
+                                <p style="color: var(--accent-color); font-weight: bold; font-size: 16px;">NT$ @service.Price.ToString("N0")</p>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="content-right">
+        <div class="sidebar-widget">
+            <h3>🕒 營業時間表</h3>
+            <table style="width: 100%; font-size: 14px; color: var(--text-light); line-height: 2;">
+                <tr><td>週一至週六</td><td style="text-align: right;">10:00 - 21:00</td></tr>
+                <tr><td style="color: var(--accent-color); font-weight: bold;">週日</td><td style="text-align: right; color: var(--accent-color);">公休</td></tr>
+            </table>
+        </div>
+
+        <div class="sidebar-widget">
+            <h3>👑 專業美容師團隊</h3>
+            <ul class="beautician-list">
+                <li>👩‍⚕️ 薇薇 (Vivi) <br><span style="font-size: 12px; color: var(--text-light);">專長：臉部保養、角蛋白</span></li>
+                <li>💅 糖糖 (Candy) <br><span style="font-size: 12px; color: var(--text-light);">專長：日式美睫、法式美甲</span></li>
+                <li>✍️ 琳達 (Linda) <br><span style="font-size: 12px; color: var(--text-light);">專長：半永久紋繡、美甲造型</span></li>
+            </ul>
+        </div>
+    </div>
+</div>

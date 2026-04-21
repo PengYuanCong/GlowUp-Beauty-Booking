@@ -1,0 +1,92 @@
+﻿@model IEnumerable<FlexSpace.Models.Booking>
+@{
+    ViewData["Title"] = "我的預約紀錄";
+}
+
+<style>
+    body { background-color: #FAF6F0; color: #4A3C31; font-family: 'Segoe UI', sans-serif; }
+    .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    .page-title { font-size: 28px; font-weight: bold; border-bottom: 3px solid #D4A373; padding-bottom: 10px; margin-bottom: 30px; }
+    .booking-card { background-color: #FFF; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #D4A373; }
+    .booking-info h4 { margin: 0 0 10px 0; color: #4A3C31; font-size: 20px; }
+    .booking-info p { margin: 5px 0; color: #7A6C5D; font-size: 15px; }
+    .status-badge { background-color: #e2e3e5; color: #383d41; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+    .status-confirmed { background-color: #d4edda; color: #155724; }
+    .price-tag { font-size: 22px; font-weight: bold; color: #D4A373; }
+    .no-data { text-align: center; padding: 50px; color: #7A6C5D; background: #FFF; border-radius: 12px; }
+
+    /* 取消按鈕專屬樣式 */
+    .btn-cancel {
+        background-color: transparent;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+        margin-top: 10px;
+    }
+    .btn-cancel:hover {
+        background-color: #dc3545;
+        color: white;
+    }
+    .card-actions { text-align: right; }
+</style>
+
+<div class="container">
+    <h1 class="page-title">✨ 我的專屬預約</h1>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+            ✅ @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+            ❌ @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        foreach (var booking in Model)
+        {
+            <div class="booking-card">
+                <div class="booking-info">
+                    <h4>@booking.BeautyService?.Name</h4>
+                    <p>📅 日期：@booking.StartTime.ToString("yyyy年MM月dd日")</p>
+                    <p>⏰ 時間：@booking.StartTime.ToString("HH:mm") ~ @booking.EndTime.ToString("HH:mm")</p>
+                    <p>
+                        🏷️ 狀態：
+                        @if (booking.Status == 1) { <span class="status-badge status-confirmed">已確認</span> }
+                        else { <span class="status-badge">處理中</span> }
+                    </p>
+                </div>
+                
+                <div class="card-actions">
+                    <div class="price-tag">
+                        NT$ @booking.TotalPrice.ToString("N0")
+                    </div>
+                    
+                    <form asp-controller="Home" asp-action="CancelBooking" method="post" onsubmit="return confirm('您確定要取消這筆預約嗎？');">
+                        <input type="hidden" name="id" value="@booking.Id" />
+                        <button type="submit" class="btn-cancel">❌ 取消預約</button>
+                    </form>
+                </div>
+
+            </div>
+        }
+    }
+    else
+    {
+        <div class="no-data">
+            <h3>您目前還沒有任何預約紀錄喔！</h3>
+            <p>趕快去首頁挑選適合您的美容服務吧～</p>
+            <a href="/Home/Index" style="display:inline-block; margin-top: 15px; padding: 10px 20px; background-color: #D4A373; color: white; text-decoration: none; border-radius: 6px;">去逛逛</a>
+        </div>
+    }
+</div>
+</div>

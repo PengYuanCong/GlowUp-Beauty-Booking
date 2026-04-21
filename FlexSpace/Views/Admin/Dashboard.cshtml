@@ -1,0 +1,137 @@
+﻿@model IEnumerable<FlexSpace.Models.Booking>
+@{
+    ViewData["Title"] = "老闆後台 - 總預約管理";
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .admin-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 3px solid var(--accent-color); padding-bottom: 10px; }
+    .admin-title { font-size: 28px; font-weight: bold; color: var(--text-dark); margin: 0; }
+    
+    /* 專業的資料表樣式 (保留你原本的設定) */
+    .admin-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; }
+    .admin-table th { background-color: var(--text-dark); color: white; padding: 15px; text-align: left; font-size: 15px; }
+    .admin-table td { padding: 15px; border-bottom: 1px solid #eee; color: var(--text-dark); font-size: 14px; }
+    .admin-table tr:hover { background-color: #fcf9f5; }
+    
+    .status-badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+    .status-ok { background-color: #d4edda; color: #155724; }
+
+    /* 🌟 新增：頂部數據卡片排版 */
+    .stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+    .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--accent-color); }
+    .stat-card h3 { font-size: 14px; color: var(--text-light); margin-bottom: 10px; }
+    .stat-card .value { font-size: 28px; font-weight: bold; color: var(--text-dark); }
+
+    /* 🌟 新增：下半部圖表與表格並排 (左邊 1.8 比例，右邊 1 比例) */
+    .dashboard-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 30px; margin-bottom: 40px; align-items: start;}
+    .chart-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; }
+</style>
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h1 class="admin-title">📊 總預約管理儀表板</h1>
+        <a href="/Admin/ManageServices" style="color: var(--accent-color); font-weight: bold; text-decoration: none;">前往服務項目管理 &rarr;</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            ✅ @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="stat-cards">
+        <div class="stat-card">
+            <h3>本月總營收</h3>
+            <div class="value">NT$ @(ViewBag.TotalRevenue != null ? ViewBag.TotalRevenue.ToString("N0") : "0")</div>
+        </div>
+        <div class="stat-card">
+            <h3>累計預約數</h3>
+            <div class="value">@(ViewBag.TotalBookings ?? 0) 次</div>
+        </div>
+        <div class="stat-card">
+            <h3>平均客單價</h3>
+            <div class="value">NT$ @(ViewBag.AvgOrderValue != null ? ViewBag.AvgOrderValue.ToString("N0") : "0")</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        
+        <div class="chart-container">
+            <h3 style="margin-top:0; color: var(--text-dark); margin-bottom: 15px;">📑 詳細預約紀錄</h3>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>預約編號 (前段)</th>
+                        <th>服務項目</th>
+                        <th>預約日期</th>
+                        <th>時間區段</th>
+                        <th>狀態</th>
+                        <th>訂單金額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var booking in Model)
+                        {
+                            <tr>
+                                <td style="color: #999; font-family: monospace;">@booking.Id.ToString().Substring(0, 8)...</td>
+                                <td style="font-weight: bold;">@booking.BeautyService?.Name</td>
+                                <td>@booking.StartTime.ToString("yyyy-MM-dd")</td>
+                                <td>@booking.StartTime.ToString("HH:mm") ~ @booking.EndTime.ToString("HH:mm")</td>
+                                <td><span class="status-badge status-ok">已成立</span></td>
+                                <td style="color: var(--accent-color); font-weight: bold;">NT$ @booking.TotalPrice.ToString("N0")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-light);">
+                                目前還沒有任何客人的預約紀錄。
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="chart-container">
+            <h3 style="margin-top:0; color: var(--text-dark); margin-bottom: 15px;">💰 各類服務營收佔比</h3>
+            <canvas id="revenueChart"></canvas>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 檢查是否有資料，避免圖表套件報錯
+    var labels = @Html.Raw(ViewBag.ChartLabels != null ? Json.Serialize(ViewBag.ChartLabels) : "[]");
+    var dataValues = @Html.Raw(ViewBag.ChartData != null ? Json.Serialize(ViewBag.ChartData) : "[]");
+
+    if(labels.length > 0) {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: dataValues,
+                    // 使用米色系、焦糖色系調色盤
+                    backgroundColor: ['#D4A373', '#E8DCC4', '#A5A58D', '#6B705C', '#CB997E'],
+                    borderWidth: 2,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+</script>

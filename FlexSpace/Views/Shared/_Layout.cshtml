@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GlowUp 漾美容</title>
+    
+    <style>
+        /* 全站共用的米色系變數與基礎設定 */
+        :root {
+            --bg-color: #FAF6F0;       /* 淺米底色 */
+            --nav-bg: #E8DCC4;         /* 導覽列深米色 */
+            --card-bg: #FFFFFF;        /* 區塊白底 */
+            --text-dark: #4A3C31;      /* 深咖啡色文字 */
+            --text-light: #7A6C5D;     /* 淺咖啡色文字 */
+            --accent-color: #D4A373;   /* 按鈕/強調色 (焦糖色) */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 頂部導覽列 */
+        .custom-navbar {
+            background-color: var(--nav-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 50px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .nav-logo { font-size: 24px; font-weight: bold; letter-spacing: 2px; color: var(--text-dark); text-decoration: none;}
+        .nav-links a { margin: 0 15px; color: var(--text-dark); text-decoration: none; font-weight: 600; font-size: 15px; }
+        .nav-links a:hover { color: var(--accent-color); }
+        
+        .container-main { min-height: 80vh; }
+        
+        /* 表單共用樣式 */
+        .form-control { width: 100%; padding: 12px; border: 1px solid #E8DCC4; border-radius: 6px; box-sizing: border-box; transition: border-color 0.3s; margin-top: 5px;}
+        .form-control:focus { border-color: var(--accent-color); outline: none; }
+        .btn-submit { background-color: var(--accent-color); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 15px;}
+        .btn-submit:hover { background-color: #bfa073; }
+    </style>
+</head>
+<body>
+    <header class="custom-navbar">
+        <a href="/Home/Index" class="nav-logo">GlowUp <span style="font-size: 14px; font-weight: normal; color: var(--text-light);">漾美容</span></a>
+        <nav class="nav-links">
+            <a href="/Home/Index">服務列表</a>
+
+            @if (User.Identity.IsAuthenticated)
+            {
+                <a href="/Home/MyBookings">我的預約</a>
+                <a href="/Home/About">關於我們</a>
+                @if (User.Identity.Name == "admin@glowup.com")
+                {
+                    <a href="/Admin/Dashboard" style="color: #dc3545; font-weight: 800;">⚙️ 後台管理</a>
+                }
+
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                    <span style="color: var(--text-light); margin: 0 15px; font-size: 14px;">Hi, @User.Identity.Name</span>
+                    <button type="submit" style="background:none; border:none; color: var(--text-dark); cursor: pointer; font-weight: 600; font-size: 15px;">登出</button>
+                </form>
+            }
+            else
+            {
+                <a href="/Account/Login">登入 / 註冊</a>
+            }
+        </nav>
+    </header>
+
+    <main class="container-main">
+        @RenderBody()
+    </main>
+
+    <footer style="text-align: center; padding: 20px; color: var(--text-light); font-size: 14px;">
+        &copy; 2026 GlowUp 漾美容預約系統 All Rights Reserved.
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

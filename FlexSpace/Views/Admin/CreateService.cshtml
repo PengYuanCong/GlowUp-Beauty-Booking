@@ -1,0 +1,52 @@
+﻿@model FlexSpace.Models.BeautyService
+@{
+    ViewData["Title"] = "新增美容服務";
+}
+
+<style>
+    .admin-container { max-width: 600px; margin: 40px auto; padding: 0 20px; }
+    .admin-card { background-color: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 5px solid var(--accent-color); }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { font-weight: bold; color: var(--text-dark); display: block; margin-bottom: 8px; }
+</style>
+
+<div class="admin-container">
+    <div class="admin-card">
+        <h2 style="margin-top: 0; color: var(--text-dark); border-bottom: 2px solid var(--nav-bg); padding-bottom: 10px;">➕ 新增服務項目</h2>
+
+        <form asp-controller="Admin" asp-action="CreateService" method="post">
+            <div class="form-group">
+                <label>服務名稱 (Name)</label>
+                <input asp-for="Name" class="form-control" placeholder="例如：水光針保濕療程" required />
+            </div>
+
+            <div class="form-group">
+                <label>服務類別 (Category)</label>
+                <select asp-for="Category" class="form-control">
+                    <option value="臉部保養">臉部保養</option>
+                    <option value="美睫">美睫</option>
+                    <option value="美甲">美甲</option>
+                    <option value="紋繡">紋繡</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>所需時間 (分鐘)</label>
+                    <input asp-for="DurationMinutes" type="number" class="form-control" placeholder="例如: 90" required />
+                </div>
+
+                <div class="form-group" style="flex: 1;">
+                    <label>價格 (NT$)</label>
+                    <input asp-for="Price" type="number" class="form-control" placeholder="例如: 1500" required />
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">確認新增並自動建立營業時間</button>
+        </form>
+        
+        <div style="margin-top: 15px; text-align: center;">
+            <a href="/Admin/ManageServices" style="color: var(--text-light); font-size: 14px;">取消並返回</a>
+        </div>
+    </div>
+</div>

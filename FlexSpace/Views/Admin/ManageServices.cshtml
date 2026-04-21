@@ -1,0 +1,55 @@
+﻿@model IEnumerable<FlexSpace.Models.BeautyService>
+@{
+    ViewData["Title"] = "服務項目管理";
+}
+
+<style>
+    .admin-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 3px solid var(--accent-color); padding-bottom: 10px; }
+    .admin-title { font-size: 28px; font-weight: bold; color: var(--text-dark); margin: 0; }
+    .admin-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; margin-top: 20px;}
+    .admin-table th { background-color: var(--text-dark); color: white; padding: 15px; text-align: left; font-size: 15px; }
+    .admin-table td { padding: 15px; border-bottom: 1px solid #eee; color: var(--text-dark); font-size: 14px; }
+    .btn-add { background-color: var(--accent-color); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+    .btn-add:hover { background-color: #bfa073; }
+</style>
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h1 class="admin-title">💅 服務項目管理</h1>
+        <a href="/Admin/CreateService" class="btn-add">➕ 新增美容服務</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            ✅ @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>服務名稱</th>
+                <th>類別</th>
+                <th>所需時間 (分鐘)</th>
+                <th>價格 (NT$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var service in Model)
+            {
+                <tr>
+                    <td style="font-weight: bold;">@service.Name</td>
+                    <td>@service.Category</td>
+                    <td>@service.DurationMinutes 分鐘</td>
+                    <td style="color: var(--accent-color); font-weight: bold;">@service.Price.ToString("N0")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <div style="margin-top: 20px;">
+        <a href="/Admin/Dashboard" style="color: var(--text-light); text-decoration: none;">&larr; 返回總預約管理</a>
+    </div>
+</div>
