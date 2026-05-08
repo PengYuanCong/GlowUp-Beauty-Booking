@@ -164,6 +164,42 @@ namespace FlexSpace.Controllers
             return RedirectToAction("MyBookings");
         }
 
+        // 🌟 新增：視覺化美容師時間表
+        // 🌟 進階版：視覺化美容師時間表 (支援彈窗預約)
+        public async Task<IActionResult> TimeTable(DateTime? date)
+        {
+            var selectedDate = date ?? DateTime.Today.AddDays(1);
+            ViewBag.SelectedDate = selectedDate;
+
+            // 1. 🌟 關鍵修正：必須 Include BeautyServices！
+            // 這樣前端的彈窗才能根據不同的美容師，顯示他們專屬的服務項目
+            var beauticians = await _context.Beauticians
+                .Include(b => b.BeautyServices)
+                .ToListAsync();
+
+            var bookingsOnDate = await _context.Bookings
+                .Include(b => b.BeautyService)
+                .Where(b => b.StartTime.Date == selectedDate.Date)
+                .ToListAsync();
+
+            var timeSlots = new List<TimeSpan>();
+            for (int hour = 10; hour <= 20; hour++)
+            {
+                timeSlots.Add(new TimeSpan(hour, 0, 0));
+                if (hour < 20)
+                {
+                    timeSlots.Add(new TimeSpan(hour, 30, 0));
+                }
+            }
+
+            ViewBag.TimeSlots = timeSlots;
+            ViewBag.Bookings = bookingsOnDate;
+
+            return View(beauticians);
+        }
+
+
+
         public IActionResult About()
         {
             return View();

@@ -119,6 +119,37 @@ namespace FlexSpace.Controllers
             return View(model);
         }
 
+        // ==========================================
+        // 🌟 新增：老闆專屬的「強制取消預約」功能
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> CancelBooking(Guid id)
+        {
+            // 1. 確認真的是老闆在操作
+            if (User.Identity?.Name != "admin@glowup.com")
+            {
+                TempData["ErrorMessage"] = "⛔ 權限不足";
+                return RedirectToAction("Index", "Home");
+            }
 
+            // 2. 去資料庫找這筆訂單 (不用像前台一樣核對 UserId，因為老闆有最高權限)
+            var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == id);
+
+            if (booking != null)
+            {
+                // 3. 刪除該筆訂單，釋放時段
+                _context.Bookings.Remove(booking);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "✅ 已成功由後台為客人取消該筆預約，時段已重新釋出！";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "❌ 取消失敗：找不到該筆預約紀錄。";
+            }
+
+            // 4. 操作完畢後，重新整理回儀表板
+            return RedirectToAction("Dashboard");
+        }
     }
 }

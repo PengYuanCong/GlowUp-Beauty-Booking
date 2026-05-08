@@ -1,0 +1,177 @@
+﻿@model IEnumerable<FlexSpace.Models.Beautician>
+@{
+    ViewData["Title"] = "美容師預約總覽";
+    var selectedDate = (DateTime)ViewBag.SelectedDate;
+    var timeSlots = (List<TimeSpan>)ViewBag.TimeSlots;
+    var bookings = (List<FlexSpace.Models.Booking>)ViewBag.Bookings;
+}
+
+<style>
+    .timetable-wrapper { max-width: 1200px; margin: 40px auto; padding: 20px; }
+    
+    .schedule-header { display: grid; grid-template-columns: 100px repeat(@Model.Count(), 1fr); background: var(--text-dark); color: white; border-radius: 8px 8px 0 0; }
+    .header-cell { padding: 15px; text-align: center; border-right: 1px solid rgba(255,255,255,0.1); font-weight: bold; }
+
+    .schedule-body { 
+        display: grid; 
+        grid-template-columns: 100px repeat(@Model.Count(), 1fr); 
+        background: white;
+        border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;
+    }
+
+    .time-col { background: #fcf9f5; border-right: 2px solid var(--nav-bg); }
+    .time-cell { height: 60px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--text-light); border-bottom: 1px solid #eee; }
+
+    .beautician-col { border-right: 1px solid #eee; position: relative; }
+    
+    .slot-box { height: 60px; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    
+    /* 可預約按鈕變成可以點擊的 div */
+    .status-o { color: #2e7d32; font-weight: bold; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f1f8e9; cursor: pointer; transition: all 0.2s; }
+    .status-o:hover { background: #c8e6c9; transform: scale(1.02); z-index: 1; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .status-x { background: #eceff1; color: #90a4ae; cursor: not-allowed; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+    .legend { display: flex; gap: 20px; margin-top: 20px; font-size: 14px; }
+
+    /* 🌟 新增：彈出視窗 (Modal) 樣式 */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; border-top: 5px solid var(--accent-color); }
+    .btn-close { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light); }
+    .btn-close:hover { color: #dc3545; }
+    
+    .modal-info-box { background: #fcf9f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; }
+    .modal-info-box p { margin: 5px 0; color: var(--text-dark); font-weight: bold; }
+</style>
+
+<div class="timetable-wrapper">
+    <div class="date-selector" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0">📅 @selectedDate.ToString("yyyy年 MM月 dd日") 行程表</h2>
+        <form asp-action="TimeTable" method="get">
+            <input type="date" name="date" value="@selectedDate.ToString("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" />
+        </form>
+    </div>
+
+    <div class="schedule-header">
+        <div class="header-cell">時段</div>
+        @foreach (var b in Model) {
+            <div class="header-cell">👩‍⚕️ @b.Name</div>
+        }
+    </div>
+
+    <div class="schedule-body">
+        <div class="time-col">
+            @foreach (var time in timeSlots) {
+                <div class="time-cell">@time.ToString(@"hh\:mm")</div>
+            }
+        </div>
+
+        @foreach (var beautician in Model) {
+            <div class="beautician-col">
+                @foreach (var time in timeSlots) {
+                    var isBooked = bookings.Any(b => b.BeautyService?.BeauticianId == beautician.Id && 
+                                                     b.StartTime.TimeOfDay <= time && 
+                                                     b.EndTime.TimeOfDay > time);
+                    <div class="slot-box">
+                        @if (isBooked) {
+                            <div class="status-x">❌ 滿檔</div>
+                        } else {
+                            <div class="status-o" onclick="openBookingModal('@selectedDate.ToString("yyyy-MM-dd")', '@time.ToString(@"hh\:mm")', @beautician.Id, '@beautician.Name')">
+                                ⭕ 預約
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal-overlay" id="bookingModal">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeBookingModal()">&times;</button>
+        <h2 style="margin-top: 0; margin-bottom: 20px; color: var(--text-dark);">✨ 確認預約資訊</h2>
+
+        <div class="modal-info-box">
+            <p>👩‍⚕️ 專屬美容師：<span id="displayBeautician" style="color: var(--accent-color);"></span></p>
+            <p>📅 預約日期：<span id="displayDate" style="color: var(--accent-color);"></span></p>
+            <p>⏰ 開始時間：<span id="displayTime" style="color: var(--accent-color);"></span></p>
+        </div>
+
+        <form action="/Home/SubmitBooking" method="post">
+            <input type="hidden" id="inputDate" name="BookingDate" />
+            <input type="hidden" id="inputTime" name="StartTime" />
+
+            <div class="form-group">
+                <label>請選擇美容服務項目</label>
+                <select class="form-control" id="selectService" name="BeautyServiceId" required>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit">立即送出預約</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 1. 將後端的美容師服務清單，轉換為 JS 陣列字典
+    const beauticianServices = {
+        @foreach (var b in Model)
+        {
+            <text>
+            "@b.Id": [
+                @foreach (var s in b.BeautyServices)
+                {
+                    <text>{ id: @s.Id, name: @Html.Raw(Json.Serialize(s.Name)), duration: @s.DurationMinutes, price: @s.Price },</text>
+                }
+            ],
+            </text>
+        }
+    };
+
+    // 2. 打開彈窗並自動填寫資料
+    function openBookingModal(date, time, beauticianId, beauticianName) {
+        // 填入顯示用的文字
+        document.getElementById('displayDate').innerText = date;
+        document.getElementById('displayTime').innerText = time;
+        document.getElementById('displayBeautician').innerText = beauticianName;
+
+        // 填入準備送給後端的隱藏 Input
+        document.getElementById('inputDate').value = date;
+        document.getElementById('inputTime').value = time;
+
+        // 動態產生下拉選單的選項
+        const selectElement = document.getElementById('selectService');
+        selectElement.innerHTML = ''; // 先清空舊選項
+
+        const services = beauticianServices[beauticianId];
+        if (services && services.length > 0) {
+            services.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.id;
+                option.text = `${s.name} (約 ${s.duration} 分鐘) - NT$ ${s.price.toLocaleString()}`;
+                selectElement.appendChild(option);
+            });
+        } else {
+            const option = document.createElement('option');
+            option.value = "";
+            option.text = "⚠️ 該美容師目前無負責項目，請先至後台新增";
+            selectElement.appendChild(option);
+        }
+
+        // 顯示彈窗
+        document.getElementById('bookingModal').style.display = 'flex';
+    }
+
+    // 3. 關閉彈窗
+    function closeBookingModal() {
+        document.getElementById('bookingModal').style.display = 'none';
+    }
+
+    // 點擊彈窗外面的黑色半透明區域，也可以關閉彈窗
+    window.onclick = function(event) {
+        const modal = document.getElementById('bookingModal');
+        if (event.target == modal) {
+            closeBookingModal();
+        }
+    }
+</script>
